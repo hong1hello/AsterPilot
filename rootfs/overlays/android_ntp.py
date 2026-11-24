@@ -164,7 +164,12 @@ def patch_module(module):
 
     cls.__init__ = init
     for name in ('_ensure_process', 'refresh', '_refresh_in_background', 'timestamp', 'status'):
-        setattr(cls, name, getattr(BackgroundTime, name))
+        patched = getattr(BackgroundTime, name, None)
+        if patched is None:
+            # 与装备码适配同理：上游分支缺某个入口时跳过，不让导入阶段崩掉整个运行时。
+            module.logger.info(f'Android 时间适配跳过缺失入口: {name}')
+            continue
+        setattr(cls, name, patched)
     initialize(module.network_time)
     cls._android_ntp_adapter = True
     module._android_ntp_adapter = True

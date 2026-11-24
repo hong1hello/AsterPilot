@@ -73,7 +73,17 @@ def patch_ap_module(module):
         '_clipboard_get': read_code,
     }
     for name, replacement in replacements.items():
-        setattr(handler, name, android_only(getattr(handler, name), replacement))
+        original = getattr(handler, name, None)
+        if original is None:
+            # 不同上游分支的方法集并不一致：Beatrice-betty/AzurPilot 的
+            # EquipmentCodeHandler 就没有 set_fastinput_ime。这里做的只是把某个入口
+            # 改接到 Android 后端，对方没有这个入口时跳过即可；用 getattr 硬取会让
+            # 整个运行时在导入阶段就崩掉，代价远大于少打一个补丁。
+            # Upstream branches do not share the same method set; a missing entry must
+            # be skipped instead of aborting the whole runtime import.
+            module.logger.info(f'Android 装备码适配跳过缺失入口: {name}')
+            continue
+        setattr(handler, name, android_only(original, replacement))
     handler._android_equipment_adapter = True
 
 
