@@ -183,8 +183,8 @@ jobs:
           # 运行时变更也需重建完整 APK；只有 Android 工程变更才前进应用包版本。
           version_code="$(git log -1 --format=%ct HEAD)"
           version_count="$(git rev-list --count HEAD)"
-          version_name="1.3.$(( version_count > 303 ? version_count - 303 : 0 ))"
-          if [[ "$previous_version_code" =~ ^[0-9]+$ && "$previous_version_name" =~ ^1\.(1|2|3)\.([0-9]+)$ &&
+          version_name="0.1.$(( version_count > 1 ? version_count - 1 : 0 ))"
+          if [[ "$previous_version_code" =~ ^[0-9]+$ && "$previous_version_name" =~ ^0\.1\.([0-9]+)$ &&
                 "$app_commit" =~ ^[0-9a-f]{40}$ ]] &&
               git cat-file -e "${app_commit}^{commit}" 2>/dev/null &&
               git merge-base --is-ancestor "$app_commit" HEAD; then
@@ -196,7 +196,7 @@ jobs:
               # 既要高于上一发布版，也要不低于当前提交时间。只取上一版 +1 会让
               # 历史上由本地构建（按提交时间编号）安装的包拒绝 CI 更新为“降级”。
               version_code="$(( previous_version_code >= version_code ? previous_version_code + 1 : version_code ))"
-              # 版本格式为 1.3.<X>；X 由 GitVersion.kt 的 VERSION_SCHEME_START_COUNT
+              # 版本格式为 0.1.<X>；X 由 GitVersion.kt 的 VERSION_SCHEME_START_COUNT
               # 对提交数做基线平移，版本计算本身不因发布次数递增。
               version_name="$version_name"
               app_commit="$GITHUB_SHA"
@@ -629,7 +629,7 @@ jobs:
           if [[ "$SIGNING_READY" == true && "$APK_BUILT" == true ]]; then
             apk="dist/azurpilot-update.apk"
             test -s "$apk"
-            asset="AzurPilot-Android-${VERSION_NAME}-update.apk"
+            asset="AsterPilot-Android-${VERSION_NAME}-update.apk"
             cp "$apk" "$asset"
             sha="$(sha256sum "$asset" | awk '{print $1}')"
             size="$(stat -c %s "$asset")"
@@ -654,7 +654,7 @@ jobs:
             if [[ "$SIGNING_READY" == true && "$APK_BUILT" == true ]]; then
               full="dist/azurpilot-full-$abi.apk"
               test -s "$full"
-              full_asset="AzurPilot-Android-${VERSION_NAME}-${abi}-full.apk"
+              full_asset="AsterPilot-Android-${VERSION_NAME}-${abi}-full.apk"
               cp "$full" "$full_asset"
               fsha="$(sha256sum "$full_asset" | awk '{print $1}')"
               fsize="$(stat -c %s "$full_asset")"
@@ -663,7 +663,7 @@ jobs:
               export "FULL_JSON_$key=$fjson"
               update="dist/azurpilot-update-$abi.apk"
               test -s "$update"
-              update_asset="AzurPilot-Android-${VERSION_NAME}-${abi}-update.apk"
+              update_asset="AsterPilot-Android-${VERSION_NAME}-${abi}-update.apk"
               cp "$update" "$update_asset"
               usha="$(sha256sum "$update_asset" | awk '{print $1}')"
               usize="$(stat -c %s "$update_asset")"
@@ -747,8 +747,8 @@ jobs:
             echo "skip frontend dist asset: $ftar not present in artifact"
           fi
           if [[ "$SIGNING_READY" == true && "$APK_BUILT" == true ]]; then
-            assets+=("$asset" "AzurPilot-Android-${VERSION_NAME}-arm64-v8a-full.apk" "AzurPilot-Android-${VERSION_NAME}-x86_64-full.apk")
-            assets+=("AzurPilot-Android-${VERSION_NAME}-arm64-v8a-update.apk" "AzurPilot-Android-${VERSION_NAME}-x86_64-update.apk")
+            assets+=("$asset" "AsterPilot-Android-${VERSION_NAME}-arm64-v8a-full.apk" "AsterPilot-Android-${VERSION_NAME}-x86_64-full.apk")
+            assets+=("AsterPilot-Android-${VERSION_NAME}-arm64-v8a-update.apk" "AsterPilot-Android-${VERSION_NAME}-x86_64-update.apk")
           fi
           sha256sum "${assets[@]}" > SHA256SUMS
           assets+=(SHA256SUMS)
@@ -776,7 +776,7 @@ jobs:
           versions="$(
             {
               jq -r '.assets[].name' <<<"$assets_json" |
-                sed -n 's/^AzurPilot-Android-\([0-9][0-9.]*\)-.*\.apk$/\1/p'
+                sed -n 's/^AsterPilot-Android-\([0-9][0-9.]*\)-.*\.apk$/\1/p'
               echo "$VERSION_NAME"
             } | sort -uV | tail -n 3
           )"
@@ -793,8 +793,8 @@ jobs:
                   delete=true
                 fi
                 ;;
-              AzurPilot-Android-*.apk)
-                v="${name#AzurPilot-Android-}"
+              AsterPilot-Android-*.apk)
+                v="${name#AsterPilot-Android-}"
                 v="${v%%-*}"
                 if [[ "$v" =~ ^[0-9][0-9.]*$ ]] && ! grep -Fxq -- "$v" <<<"$versions"; then
                   delete=true
